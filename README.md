@@ -2,6 +2,8 @@
 
 A full-stack AI application that analyzes customer reviews in bulk using Google Gemini (`gemini-3.1-flash-lite`). It features a **FastAPI backend** serving structured Pydantic analysis, an interactive **Streamlit frontend dashboard**, and **SQLite persistence** for storing and viewing review history.
 
+- You can try this app here: [Visit Here](https://customer-review-analyzer-gemini.streamlit.app/)
+
 ---
 
 ## 📌 Project Overview
