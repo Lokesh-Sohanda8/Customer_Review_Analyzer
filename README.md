@@ -232,3 +232,37 @@ Looking to build further? Consider adding:
 2. **Sentiment Filtering:** Add a dropdown (`st.selectbox`) to filter the table by sentiment (e.g. view only "negative" reviews).
 3. **Direct File Upload:** Add an `st.file_uploader` to upload `.txt` or `.csv` files directly instead of copy-pasting.
 4. **Actionable Suggestions:** Extend the Gemini prompt to generate a 1-sentence recommended action for resolving negative feedback.
+
+
+## ☁️ Deploy the app (Streamlit frontend + FastAPI backend)
+
+Streamlit Community Cloud runs `app.py`; it does not automatically start the separate FastAPI process in `api.py`. The frontend therefore must call a publicly reachable backend URL when deployed. The code now reads `BACKEND_API_URL` from Streamlit secrets/environment variables. It defaults to `http://127.0.0.1:8000` for local development.
+
+### 1. Deploy the FastAPI backend on Render
+
+Create a **Web Service** connected to this repository. If the repository root is this project folder, use:
+
+- **Build command:** `pip install -r requirements-api.txt`
+- **Start command:** `uvicorn api:app --host 0.0.0.0 --port $PORT`
+
+The included `render.yaml` contains this configuration. Add `GOOGLE_API_KEY` in the Render service's Environment settings. Keep the key private; do not commit it to Git.
+
+After deployment, open the backend's base URL (for example, `https://your-service.onrender.com/`). It should return a JSON welcome message. The analysis endpoint is `/analyze_review`.
+
+### 2. Point Streamlit at the deployed backend
+
+In Streamlit Community Cloud, open the app's **Settings → Secrets** and add the base URL for the Render service (do not add `/analyze_review` at the end):
+
+```toml
+BACKEND_API_URL = "https://your-service.onrender.com"
+```
+
+Save the secret and reboot/redeploy the Streamlit app if needed. The frontend will request `https://your-service.onrender.com/analyze_review`. No browser CORS configuration is needed for this current setup because `app.py` makes the HTTP request from Python on the Streamlit server, not directly from browser JavaScript.
+
+### 3. Verify the flow
+
+1. Open the backend base URL and confirm it returns the welcome JSON.
+2. Open the Streamlit app and analyze one sample review.
+3. If the request fails, expand **View API errors** under the results. Confirm that `BACKEND_API_URL` has no trailing path, the backend is running, and `GOOGLE_API_KEY` is configured on the backend.
+
+Note: Render free web services may sleep when idle, so the first backend request after inactivity can take longer. Also, `feedback.db` is a local SQLite file; for durable history across redeploys or restarts, migrate it to a managed database.
